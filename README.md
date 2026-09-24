@@ -48,6 +48,12 @@ npm start
 
 Then open `http://localhost:4173`.
 
+### Test from another device on your local network
+
+Run `Start RAYNET CRM on network.cmd`, enter the server computer's IPv4 address when prompted, and use the displayed address on the other device. The standard launcher remains restricted to the local computer.
+
+Windows may ask whether Node.js can communicate through the firewall. Allow access only on **Private networks**. This network launcher uses plain HTTP and is intended only for temporary testing on a trusted local network; use the HTTPS reverse-proxy deployment below for internet access.
+
 Server-managed records are stored as JSON files in the configured data directory. Calendar data is currently stored in the browser for each installation; server-side event migration is planned before production use.
 
 ## First login and user accounts
