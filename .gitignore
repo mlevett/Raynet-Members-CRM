@@ -1,0 +1,10 @@
+.env
+.DS_Store
+node_modules/
+logs/*
+!logs/.gitignore
+data/*
+!data/.gitignore
+!data/.gitkeep
+*.zip
+tmp/

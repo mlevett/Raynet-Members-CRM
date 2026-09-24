@@ -1,0 +1,21 @@
+[Unit]
+Description=RAYNET Member Hub
+After=network.target
+
+[Service]
+Type=simple
+User=VIRTUALMIN_USER
+Group=VIRTUALMIN_USER
+WorkingDirectory=/home/VIRTUALMIN_USER/raynet-crm
+EnvironmentFile=/home/VIRTUALMIN_USER/raynet-crm.env
+ExecStart=/usr/bin/node /home/VIRTUALMIN_USER/raynet-crm/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/VIRTUALMIN_USER/hub-data
+
+[Install]
+WantedBy=multi-user.target

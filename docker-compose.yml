@@ -1,0 +1,22 @@
+services:
+  raynet-crm:
+    build: .
+    container_name: raynet-crm
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    ports:
+      - "127.0.0.1:4173:4173"
+    environment:
+      NODE_ENV: "production"
+      HOST: "0.0.0.0"
+      PORT: "4173"
+      APP_URL: "${APP_URL:-http://localhost:4173}"
+      TRUST_PROXY: "1"
+      TRUSTED_ORIGINS: "${TRUSTED_ORIGINS:-}"
+      RAYNET_DATA_DIR: "/app/data"
+    volumes:
+      - ./data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#133D4A" />
+  <title>SE Hants RAYNET — Member Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260924-sidebar-fix" />
+</head>
+<body>
+  <div id="public-home" hidden></div>
+  <section class="auth-screen" id="auth-screen">
+    <div class="auth-brand"><img class="brand-logo auth-logo" data-brand-logo src="assets/sehants-raynet-logo.png" alt="Organisation logo"><div><strong data-brand-name>South East Hampshire RAYNET</strong><small data-brand-subtitle>Member CRM</small></div></div>
+    <div class="auth-card">
+      <div class="auth-signal"><span></span><span></span><span></span></div>
+      <div id="auth-content"><p class="auth-loading">Checking your session…</p></div>
+    </div>
+    <small class="auth-footer">Secure member administration</small>
+  </section>
+  <div class="app-shell" id="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand"><img class="brand-logo" data-brand-logo src="assets/sehants-raynet-logo.png" alt="Organisation logo"><div><strong data-brand-name>South East Hampshire RAYNET</strong><small data-brand-subtitle>Member CRM</small></div></div>
+      <nav id="main-nav">
+        <button class="nav-item active" data-page="dashboard"><i data-icon="grid"></i><span>Overview</span></button>
+        <button class="nav-item" data-page="members"><i data-icon="users"></i><span>Members</span><b id="member-count-pill"></b></button>
+        <button class="nav-item" data-page="organisations"><i data-icon="building"></i><span>End users</span></button>
+        <button class="nav-item" data-page="renewals"><i data-icon="refresh"></i><span>Renewals</span><b class="warn" id="renewal-pill"></b></button>
+        <button class="nav-item" data-page="events"><i data-icon="calendar"></i><span>Events</span></button>
+        <button class="nav-item admin-only" data-page="users"><i data-icon="shield"></i><span>Users & access</span></button>
+        <button class="nav-item admin-only" data-page="branding"><i data-icon="palette"></i><span>Branding</span></button>
+        <button class="nav-item admin-only" data-page="public-site"><i data-icon="building"></i><span>Member hub page</span></button>
+        <button class="nav-item admin-only" data-page="membership-settings"><i data-icon="settings"></i><span>Member settings</span></button>
+        <button class="special-nav admin-only" id="email-settings-nav" onclick="emailSettingsForm()"><i data-icon="settings"></i><span>Email settings</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="portal-link" id="open-public"><span class="portal-icon">↗</span><span><small>Public access</small>Member portal</span></button>
+        <div class="profile"><div class="avatar" id="profile-avatar">ML</div><div><strong id="profile-name">Account</strong><small id="profile-role">Signed in</small></div><button id="logout-btn" aria-label="Sign out" title="Sign out">↪</button></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar"><button class="mobile-menu" id="mobile-menu">☰</button><div class="crumb"><span data-brand-short>SE Hants RAYNET</span><b>/</b><strong id="page-title">Overview</strong></div><div class="top-actions"><button class="icon-btn" aria-label="Search" id="global-search"><i data-icon="search"></i></button><button class="icon-btn notification" aria-label="Notifications"><i data-icon="bell"></i><em>3</em></button><button class="primary-btn" id="quick-add">＋ <span>Quick add</span></button></div></header>
+      <div id="content"></div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modal-close">×</button><div id="modal-content"></div></div></div>
+  <div class="toast" id="toast"><span>✓</span><div><strong>Saved</strong><small>Changes have been recorded.</small></div></div>
+  <script src="app.js?v=20260924-public-home-stable"></script>
+</body>
+</html>

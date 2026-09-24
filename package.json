@@ -1,0 +1,10 @@
+{
+  "name": "sehants-raynet-crm",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "description": "SE Hants RAYNET membership, renewals and events CRM",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

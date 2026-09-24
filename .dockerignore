@@ -1,0 +1,8 @@
+.git
+.gitignore
+.env
+data
+logs
+deploy
+*.zip
+Start RAYNET CRM.cmd
