@@ -22,14 +22,6 @@ for /f "tokens=*" %%V in ('"%RAYNET_NODE%" --version') do set "NODE_VERSION=%%V"
 echo Using Node.js %NODE_VERSION%
 echo.
 
-powershell -NoProfile -Command "try { $response = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:4173/api/auth/status' -TimeoutSec 2; if ($response.StatusCode -eq 200) { exit 0 } }; exit 1" >nul 2>nul
-if not errorlevel 1 (
-  echo The CRM is already running at http://localhost:4173
-  start "" "http://localhost:4173"
-  timeout /t 2 >nul
-  exit /b 0
-)
-
 echo Starting SE Hants RAYNET CRM...
 echo Open: http://localhost:4173
 echo Keep this window open while using the CRM.
