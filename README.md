@@ -48,11 +48,11 @@ npm start
 
 Then open `http://localhost:4173`.
 
-Server-managed records are stored as JSON files in the configured data directory. Some demonstration calendar content is still initialised in the browser; do not import real member data into a public review instance until the remaining event migration is complete.
+Server-managed records are stored as JSON files in the configured data directory. Calendar data is currently stored in the browser for each installation; server-side event migration is planned before production use.
 
 ## First login and user accounts
 
-On the first launch, the CRM asks you to create the initial administrator account. The password must contain at least 10 characters.
+On the first launch, the CRM asks you to create the first member profile and its linked administrator account. The password must contain at least 10 characters. New installations start empty; the setup page includes an optional checkbox for clearly labelled sample members, end users, and events.
 
 After signing in, administrators can open **Users & access** from the sidebar to:
 

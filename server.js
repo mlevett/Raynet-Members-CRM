@@ -41,6 +41,14 @@ if(!fs.existsSync(emailSettingsFile))fs.writeFileSync(emailSettingsFile,JSON.str
 const defaultRenewalAutomation={enabled:false,chaseAfterDays:14,finalAfterDays:14,lapseAfterDays:14,initialSubject:'Your {{organisation}} membership renewal',initialBody:'Hello {{name}},\n\nYour membership is due for renewal until {{expiry}}. Please respond using your personal link:\n{{link}}',chaseSubject:'Reminder: your membership renewal',chaseBody:'Hello {{name}},\n\nWe have not yet received your renewal response. Please reply here:\n{{link}}',finalSubject:'Final reminder: membership renewal',finalBody:'Hello {{name}},\n\nThis is your final renewal reminder. If we do not hear from you, your membership will be marked as lapsed.\n{{link}}'};
 if(!fs.existsSync(renewalAutomationFile))fs.writeFileSync(renewalAutomationFile,JSON.stringify(defaultRenewalAutomation,null,2)+'\n');
 const defaultPublicSite={heroTitle:'Your South East Hampshire RAYNET member hub.',heroText:'See group news and upcoming events, access useful member resources, and sign in to manage your profile and availability.',links:[{title:'Main SE Hants RAYNET website',url:'https://www.sehantsraynet.org.uk/',description:'Visit our main public website for information about the group, coverage, contacts and how we help.'},{title:'RAYNET UK',url:'https://www.raynet-uk.net/',description:'Visit the national RAYNET organisation.'}],news:[{title:'Welcome to the member hub',date:'2026-09-24',summary:'This members site brings upcoming events, group updates and secure member access together in one place.'}]};
+const sampleMembers=[
+  {name:'Example Member',call:'M7ABC',membershipNumber:'SAMPLE-001',raynetEmail:'member@example.invalid',personalEmail:'',mobilePhone:'07700 900000',homePhone:'',address:'',membershipType:'Member',committeePositions:[],status:'Active',renewal:'31 Mar 2029'},
+  {name:'Example Committee Member',call:'G0ABC',membershipNumber:'SAMPLE-002',raynetEmail:'committee@example.invalid',personalEmail:'',mobilePhone:'07700 900001',homePhone:'',address:'',membershipType:'Committee member',committeePositions:['Group Secretary','Membership Officer'],status:'Active',renewal:'31 Mar 2029'}
+];
+const sampleOrganisations=[
+  {name:'Example Local Authority',type:'Local authority',desc:'Sample resilience partner for demonstration purposes.',contacts:[],last:'Never',initials:'EL'},
+  {name:'Example Charity',type:'Charity',desc:'Sample voluntary-sector partner for demonstration purposes.',contacts:[],last:'Never',initials:'EC'}
+];
 if(!fs.existsSync(publicSiteFile))fs.writeFileSync(publicSiteFile,JSON.stringify(defaultPublicSite,null,2)+'\n');
 if(!fs.existsSync(sessionsFile))fs.writeFileSync(sessionsFile,'[]\n');
 
@@ -91,7 +99,10 @@ async function api(req,res,pathname){
     if(!validPassword(body.password))return json(res,400,{error:'Password must be at least 10 characters.'});
     const memberData=body.member||(body.memberData?JSON.parse(body.memberData):{}), member={id:crypto.randomUUID(),name:body.name.trim(),call:String(memberData.call||'').trim(),membershipNumber:String(memberData.membershipNumber||'').trim(),raynetEmail:String(memberData.raynetEmail||body.email).trim().toLowerCase(),personalEmail:String(memberData.personalEmail||'').trim().toLowerCase(),mobilePhone:String(memberData.mobilePhone||'').trim(),homePhone:String(memberData.homePhone||'').trim(),address:String(memberData.address||'').trim(),membershipType:memberData.membershipType||'Member',committeePositions:Array.isArray(memberData.committeePositions)?memberData.committeePositions:[],status:'Active',renewal:memberData.renewal||'—',createdAt:new Date().toISOString()};
     const admin={id:crypto.randomUUID(),name:body.name.trim(),email:body.email.trim().toLowerCase(),role:'admin',memberId:member.id,active:true,passwordHash:hashPassword(body.password),createdAt:new Date().toISOString(),lastLogin:new Date().toISOString()};
-    writeCollection(membersFile,[member]);writeUsers([admin]);const token=createSession(admin.id);return json(res,201,{user:publicUser(admin),member},{'Set-Cookie':sessionCookie(token)});
+    const installSamples=body.includeSampleData===true;
+    const members=[member,...(installSamples?sampleMembers.map(item=>({...item,id:crypto.randomUUID(),createdAt:new Date().toISOString(),sample:true})):[])];
+    const organisations=installSamples?sampleOrganisations.map(item=>({...item,id:crypto.randomUUID(),sample:true})):[];
+    writeCollection(membersFile,members);writeCollection(organisationsFile,organisations);writeCollection(renewalsFile,[]);writeCollection(responsesFile,[]);writeUsers([admin]);const token=createSession(admin.id);return json(res,201,{user:publicUser(admin),member,sampleData:installSamples},{'Set-Cookie':sessionCookie(token)});
   }
   if(pathname==='/api/auth/login'&&req.method==='POST'){
     const ip=clientIp(req)||'local', attempt=loginAttempts.get(ip)||{count:0,until:0};
