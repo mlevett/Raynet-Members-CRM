@@ -64,7 +64,7 @@ An optional MySQL-backed document store is available for server records. Existin
 
 MySQL can be selected during the first-time setup wizard. On an existing installation, sign in as an administrator and open **Database settings**. Use **Test connection**, then **Save & migrate** to copy all existing JSON collections into MySQL and make it active. The JSON files are retained as a local recovery cache; the database password is masked in the interface and stored in the private data directory. Environment variables still take precedence for managed deployments.
 
-After confirming that MySQL is active and backed up, **Remove local JSON files** verifies every CRM collection in MySQL before deleting the local record cache. The application then runs in MySQL-only mode and does not recreate JSON record files. Switching back to JSON explicitly restores the files from MySQL. The first-time wizard also offers a **MySQL only** option.
+After confirming that MySQL is active and backed up, **Remove local JSON files** verifies every CRM collection in MySQL before deleting the local record cache. The application then runs in MySQL-only mode and does not recreate JSON record files. Switching back to JSON explicitly restores the files from MySQL. Fresh installations that select MySQL use MySQL-only storage automatically after setup verifies the database.
 
 1. Create a MySQL database and restricted database user in Virtualmin.
 2. For a direct Node installation, run `npm install` once.
