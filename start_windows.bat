@@ -8,8 +8,6 @@ where node >nul 2>nul
 if not errorlevel 1 set "RAYNET_NODE=node"
 
 if not defined RAYNET_NODE if exist "%ProgramFiles%\nodejs\node.exe" set "RAYNET_NODE=%ProgramFiles%\nodejs\node.exe"
-if not defined RAYNET_NODE if exist "%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" set "RAYNET_NODE=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
-
 if not defined RAYNET_NODE (
   echo Node.js 18 or newer is required but could not be found.
   echo.

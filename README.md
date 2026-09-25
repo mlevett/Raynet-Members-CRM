@@ -38,8 +38,6 @@ The easiest option on Windows is to double-click `start_windows.bat` or `Start R
 
 If you prefer Docker, double-click `start_windows_docker.bat` instead.
 
-When Codex manages the running server, its process ID and output logs are kept in the `logs` directory. You can ask Codex to start, stop, restart, or check the CRM.
-
 Use Node.js 18 or newer:
 
 ```powershell
@@ -50,7 +48,7 @@ Then open `http://localhost:4173`.
 
 ### Test from another device on your local network
 
-Run `Start RAYNET CRM on network.cmd`, enter the server computer's IPv4 address when prompted, and use the displayed address on the other device. The standard launcher remains restricted to the local computer.
+Run `Start RAYNET CRM on network.cmd`. It listens on all network interfaces and displays a detected local-network address to open on another device. The standard launcher remains restricted to the local computer.
 
 Windows may ask whether Node.js can communicate through the firewall. Allow access only on **Private networks**. This network launcher uses plain HTTP and is intended only for temporary testing on a trusted local network; use the HTTPS reverse-proxy deployment below for internet access.
 

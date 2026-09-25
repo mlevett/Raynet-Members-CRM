@@ -103,7 +103,7 @@ function validEmail(email){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email
 function sessionCookie(token,maxAge=28800){return `raynet_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${appUrl.protocol==='https:'?'; Secure':''}`;}
 function createSession(userId){const token=crypto.randomBytes(32).toString('hex'),sessions=readSessions();sessions.push({tokenHash:tokenHash(token),userId,expires:Date.now()+8*60*60*1000,createdAt:new Date().toISOString()});writeSessions(sessions);return token;}
 function deleteSession(token){const hash=tokenHash(token);writeSessions(readSessions().filter(session=>session.tokenHash!==hash));}
-function sameOrigin(req){const origin=req.headers.origin;return !origin||trustedOrigins.has(origin);}
+function sameOrigin(req){const origin=req.headers.origin;if(!origin)return true;const forwardedProtocol=trustProxy?String(req.headers['x-forwarded-proto']||'').split(',')[0].trim():'';const protocol=forwardedProtocol||((req.socket.encrypted)?'https':'http'),requestOrigin=req.headers.host?`${protocol}://${req.headers.host}`:'';return trustedOrigins.has(origin)||origin===requestOrigin;}
 function clientIp(req){return trustProxy?String(req.headers['x-forwarded-for']||'').split(',')[0].trim()||req.socket.remoteAddress:req.socket.remoteAddress;}
 function renewalStartDate(value){const parsed=new Date(value);return Number.isNaN(parsed.getTime())?new Date():parsed;}
 function addRenewalYears(value,years=3){const date=renewalStartDate(value);date.setFullYear(date.getFullYear()+Number(years||3));return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
