@@ -62,6 +62,8 @@ The default `json` storage driver keeps private server records in `RAYNET_DATA_D
 
 An optional MySQL-backed document store is available for server records. Existing JSON installations remain compatible and the JSON files act as a local working cache when MySQL is enabled.
 
+MySQL can be selected during the first-time setup wizard. On an existing installation, sign in as an administrator and open **Database settings**. Use **Test connection**, then **Save & migrate** to copy all existing JSON collections into MySQL and make it active. The JSON files are retained as a local recovery cache; the database password is masked in the interface and stored in the private data directory. Environment variables still take precedence for managed deployments.
+
 1. Create a MySQL database and restricted database user in Virtualmin.
 2. For a direct Node installation, run `npm install` once.
 3. Set `STORAGE_DRIVER=mysql` and the `MYSQL_*` values shown in `.env.example`.

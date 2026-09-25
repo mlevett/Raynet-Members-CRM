@@ -32,3 +32,4 @@
 .guest-consent{justify-content:flex-start}.guest-consent input{width:auto;flex:none;margin:0}.guest-consent span{min-width:0}
 .activity-row .badge{margin-left:6px;vertical-align:middle}.event-staffing-stats .stat{padding:15px}
 @media(max-width:560px){.event-staffing-stats{grid-template-columns:1fr!important}}
+.setup-database{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fafcfb}.setup-database summary{cursor:pointer;color:var(--ink)}.setup-database[open] summary{margin-bottom:14px}.setup-database .form-grid .field.full{grid-column:1/-1}#database-mysql-fields[hidden],#setup-mysql-fields[hidden]{display:none}

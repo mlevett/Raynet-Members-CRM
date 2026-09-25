@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260925-guest-history" />
+  <link rel="stylesheet" href="styles.css?v=20260925-database-settings" />
 </head>
 <body>
   <div id="public-home" hidden></div>
@@ -35,6 +35,7 @@
         <button class="nav-item admin-only" data-page="public-site"><i data-icon="building"></i><span>Member hub page</span></button>
         <button class="nav-item admin-only" data-page="membership-settings"><i data-icon="settings"></i><span>Member settings</span></button>
         <button class="special-nav admin-only" id="email-settings-nav" onclick="emailSettingsForm()"><i data-icon="settings"></i><span>Email settings</span></button>
+        <button class="special-nav admin-only" id="database-settings-nav" onclick="databaseSettingsForm()"><i data-icon="settings"></i><span>Database settings</span></button>
       </nav>
       <div class="sidebar-footer">
         <button class="portal-link" id="open-public"><span class="portal-icon">↗</span><span><small>Public access</small>Member portal</span></button>
@@ -50,6 +51,6 @@
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modal-close">×</button><div id="modal-content"></div></div></div>
   <div class="toast" id="toast"><span>✓</span><div><strong>Saved</strong><small>Changes have been recorded.</small></div></div>
-  <script src="app.js?v=20260925-guest-history"></script>
+  <script src="app.js?v=20260925-database-settings"></script>
 </body>
 </html>
