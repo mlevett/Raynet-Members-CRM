@@ -29,3 +29,4 @@
 
 /* Keep Quick add choices aligned as icon-and-label rows. */
 .choice-list button.choice{width:100%;text-align:left}.choice-list button.choice>span:last-child{min-width:0;flex:1}.choice-list button.choice strong,.choice-list button.choice small{text-align:left}
+.guest-consent{justify-content:flex-start}.guest-consent input{width:auto;flex:none;margin:0}.guest-consent span{min-width:0}
