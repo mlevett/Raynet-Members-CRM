@@ -24,3 +24,5 @@
 
 /* The member hub is now the default landing page, so the old portal shortcut is redundant. */
 #open-public{display:none!important}.sidebar nav{overflow-y:auto;min-height:0;padding-right:3px}.sidebar-footer{flex:none}.sidebar nav::-webkit-scrollbar{width:5px}.sidebar nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:5px}
+
+.home-calendar-title{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 17px}.home-calendar-title .secondary-btn{min-width:42px;padding:8px 12px;font-size:18px}

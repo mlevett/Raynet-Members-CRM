@@ -6,5 +6,8 @@
   "description": "SE Hants RAYNET membership, renewals and events CRM",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.15.1"
   }
 }

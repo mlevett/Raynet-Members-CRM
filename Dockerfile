@@ -4,6 +4,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package.json ./
+RUN npm install --omit=dev
 COPY server.js app.js index.html automation.html automation.js styles.css ./
 COPY assets ./assets
 

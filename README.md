@@ -54,7 +54,20 @@ Run `Start RAYNET CRM on network.cmd`, enter the server computer's IPv4 address 
 
 Windows may ask whether Node.js can communicate through the firewall. Allow access only on **Private networks**. This network launcher uses plain HTTP and is intended only for temporary testing on a trusted local network; use the HTTPS reverse-proxy deployment below for internet access.
 
-Server-managed records are stored as JSON files in the configured data directory. Calendar data is currently stored in the browser for each installation; server-side event migration is planned before production use.
+Server-managed records are stored as JSON files in the configured data directory. Older browser-local events are imported into server storage the first time an administrator signs in after upgrading.
+
+## Data storage
+
+The default `json` storage driver keeps private server records in `RAYNET_DATA_DIR`. This includes users, members, end users, events, renewals, sessions, settings, and guest-helper offers.
+
+An optional MySQL-backed document store is available for server records. Existing JSON installations remain compatible and the JSON files act as a local working cache when MySQL is enabled.
+
+1. Create a MySQL database and restricted database user in Virtualmin.
+2. For a direct Node installation, run `npm install` once.
+3. Set `STORAGE_DRIVER=mysql` and the `MYSQL_*` values shown in `.env.example`.
+4. Start the CRM. It creates the `raynet_crm_store` table and imports existing JSON collections if the table is empty.
+
+On later starts, MySQL is treated as the source of truth and its collections are loaded into the local cache. Back up the MySQL database in production. Never commit `.env` or database passwords to Git.
 
 ## First login and user accounts
 

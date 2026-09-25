@@ -18,12 +18,18 @@ const emailSettingsFile = path.join(dataDir, 'email-settings.json');
 const renewalAutomationFile = path.join(dataDir, 'renewal-automation.json');
 const publicSiteFile = path.join(dataDir, 'public-site.json');
 const sessionsFile = path.join(dataDir, 'sessions.json');
+const guestHelpersFile = path.join(dataDir, 'guest-helpers.json');
+const eventsFile = path.join(dataDir, 'events.json');
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || '127.0.0.1';
 const appUrl = new URL(process.env.APP_URL || `http://localhost:${port}`);
 const trustedOrigins = new Set([appUrl.origin,`http://localhost:${port}`,`http://127.0.0.1:${port}`,...String(process.env.TRUSTED_ORIGINS||'').split(',').map(value=>value.trim()).filter(Boolean)]);
 const trustProxy = process.env.TRUST_PROXY === '1';
+const storageDriver = String(process.env.STORAGE_DRIVER||'json').toLowerCase();
+let mysqlPool = null;
+let mysqlWriteQueue = Promise.resolve();
 const loginAttempts = new Map();
+const guestInterestAttempts = new Map();
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.svg':'image/svg+xml', '.json':'application/json' };
 
 fs.mkdirSync(dataDir, { recursive: true });
@@ -49,17 +55,25 @@ const sampleOrganisations=[
   {name:'Example Local Authority',type:'Local authority',desc:'Sample resilience partner for demonstration purposes.',contacts:[],last:'Never',initials:'EL'},
   {name:'Example Charity',type:'Charity',desc:'Sample voluntary-sector partner for demonstration purposes.',contacts:[],last:'Never',initials:'EC'}
 ];
+const sampleEvents=[
+  {id:'sample-event-1',title:'Example Training Exercise',date:'18 Oct',fullDate:'2026-10-18',time:'09:30',location:'Example venue',desc:'Sample event for testing member availability.',yes:0,needed:8,tone:'',sample:true},
+  {id:'sample-event-2',title:'Example Community Event',date:'08 Nov',fullDate:'2026-11-08',time:'10:00',location:'Example town centre',desc:'Sample public-service event.',yes:0,needed:6,tone:'amber',sample:true}
+];
 if(!fs.existsSync(publicSiteFile))fs.writeFileSync(publicSiteFile,JSON.stringify(defaultPublicSite,null,2)+'\n');
 if(!fs.existsSync(sessionsFile))fs.writeFileSync(sessionsFile,'[]\n');
+if(!fs.existsSync(guestHelpersFile))fs.writeFileSync(guestHelpersFile,'[]\n');
+if(!fs.existsSync(eventsFile))fs.writeFileSync(eventsFile,'[]\n');
 
 function readUsers() { try { return JSON.parse(fs.readFileSync(usersFile, 'utf8')); } catch { return []; } }
-function writeUsers(users) { const temp=usersFile+'.tmp'; fs.writeFileSync(temp,JSON.stringify(users,null,2)+'\n'); fs.renameSync(temp,usersFile); }
+function persistFile(file,value){const content=typeof value==='string'?value:JSON.stringify(value,null,2)+'\n',temp=file+'.tmp';fs.writeFileSync(temp,content);fs.renameSync(temp,file);if(mysqlPool){const collection=path.basename(file,'.json');mysqlWriteQueue=mysqlWriteQueue.then(()=>mysqlPool.execute('INSERT INTO raynet_crm_store (collection_name,payload) VALUES (?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload), updated_at=CURRENT_TIMESTAMP',[collection,content])).catch(error=>console.error('MySQL write failed:',error.message))}}
+function writeUsers(users) { persistFile(usersFile,users); }
 function readBranding(){try{return {...defaultBranding,...JSON.parse(fs.readFileSync(brandingFile,'utf8'))};}catch{return defaultBranding;}}
-function writeBranding(branding){const temp=brandingFile+'.tmp';fs.writeFileSync(temp,JSON.stringify(branding,null,2)+'\n');fs.renameSync(temp,brandingFile);}
+function writeBranding(branding){persistFile(brandingFile,branding);}
 function readSettings(){try{return {...defaultSettings,...JSON.parse(fs.readFileSync(settingsFile,'utf8'))};}catch{return defaultSettings;}}
-function writeSettings(settings){const temp=settingsFile+'.tmp';fs.writeFileSync(temp,JSON.stringify(settings,null,2)+'\n');fs.renameSync(temp,settingsFile);}
+function writeSettings(settings){persistFile(settingsFile,settings);}
 function readCollection(file){try{return JSON.parse(fs.readFileSync(file,'utf8'));}catch{return [];}}
-function writeCollection(file,items){const temp=file+'.tmp';fs.writeFileSync(temp,JSON.stringify(items,null,2)+'\n');fs.renameSync(temp,file);}
+function writeCollection(file,items){persistFile(file,items);}
+async function initialiseStorage(){if(storageDriver==='json')return;if(storageDriver!=='mysql')throw new Error('STORAGE_DRIVER must be json or mysql.');let mysql;try{mysql=require('mysql2/promise')}catch{throw new Error('MySQL storage requires dependencies to be installed with npm install.')}for(const key of ['MYSQL_HOST','MYSQL_DATABASE','MYSQL_USER'])if(!process.env[key])throw new Error(`${key} is required for MySQL storage.`);mysqlPool=mysql.createPool({host:process.env.MYSQL_HOST,port:Number(process.env.MYSQL_PORT||3306),database:process.env.MYSQL_DATABASE,user:process.env.MYSQL_USER,password:process.env.MYSQL_PASSWORD||'',waitForConnections:true,connectionLimit:Number(process.env.MYSQL_CONNECTION_LIMIT||5),ssl:process.env.MYSQL_SSL==='1'?{rejectUnauthorized:true}:undefined});await mysqlPool.execute('CREATE TABLE IF NOT EXISTS raynet_crm_store (collection_name VARCHAR(80) PRIMARY KEY, payload LONGTEXT NOT NULL, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)');const files=[usersFile,brandingFile,settingsFile,membersFile,responsesFile,organisationsFile,renewalsFile,emailSettingsFile,renewalAutomationFile,publicSiteFile,sessionsFile,guestHelpersFile,eventsFile];for(const file of files){const collection=path.basename(file,'.json'),[rows]=await mysqlPool.execute('SELECT payload FROM raynet_crm_store WHERE collection_name=?',[collection]);if(rows.length){const payload=String(rows[0].payload);JSON.parse(payload);fs.writeFileSync(file,payload.endsWith('\n')?payload:payload+'\n')}else{const payload=fs.readFileSync(file,'utf8');await mysqlPool.execute('INSERT INTO raynet_crm_store (collection_name,payload) VALUES (?,?)',[collection,payload])}}console.log(`Storage driver: MySQL (${process.env.MYSQL_HOST}/${process.env.MYSQL_DATABASE})`)}
 function publicUser(user) { return {id:user.id,name:user.name,email:user.email,role:user.role,memberId:user.memberId||null,active:user.active,createdAt:user.createdAt,lastLogin:user.lastLogin||null}; }
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')) { return `${salt}:${crypto.scryptSync(password,salt,64).toString('hex')}`; }
 function verifyPassword(password,stored) { const [salt,expected]=String(stored).split(':'); if(!salt||!expected)return false; const actual=crypto.scryptSync(password,salt,64), expectedBuffer=Buffer.from(expected,'hex'); return actual.length===expectedBuffer.length&&crypto.timingSafeEqual(actual,expectedBuffer); }
@@ -91,6 +105,7 @@ async function api(req,res,pathname){
   const users=readUsers(), user=currentUser(req);
   if(pathname==='/api/branding'&&req.method==='GET')return json(res,200,{branding:readBranding()});
   if(pathname==='/api/public-site'&&req.method==='GET')return json(res,200,{settings:{...defaultPublicSite,...readCollection(publicSiteFile)}});
+  if(pathname==='/api/events'&&req.method==='GET')return json(res,200,{events:readCollection(eventsFile)});
   if(pathname==='/api/auth/status'&&req.method==='GET')return json(res,200,{setupRequired:users.length===0,user:user?publicUser(user):null});
   if(pathname==='/api/auth/setup'&&req.method==='POST'){
     if(users.length)return json(res,409,{error:'Initial setup has already been completed.'});
@@ -102,7 +117,7 @@ async function api(req,res,pathname){
     const installSamples=body.includeSampleData===true;
     const members=[member,...(installSamples?sampleMembers.map(item=>({...item,id:crypto.randomUUID(),createdAt:new Date().toISOString(),sample:true})):[])];
     const organisations=installSamples?sampleOrganisations.map(item=>({...item,id:crypto.randomUUID(),sample:true})):[];
-    writeCollection(membersFile,members);writeCollection(organisationsFile,organisations);writeCollection(renewalsFile,[]);writeCollection(responsesFile,[]);writeUsers([admin]);const token=createSession(admin.id);return json(res,201,{user:publicUser(admin),member,sampleData:installSamples},{'Set-Cookie':sessionCookie(token)});
+    writeCollection(membersFile,members);writeCollection(organisationsFile,organisations);writeCollection(eventsFile,installSamples?sampleEvents:[]);writeCollection(renewalsFile,[]);writeCollection(responsesFile,[]);writeCollection(guestHelpersFile,[]);writeUsers([admin]);const token=createSession(admin.id);return json(res,201,{user:publicUser(admin),member,sampleData:installSamples},{'Set-Cookie':sessionCookie(token)});
   }
   if(pathname==='/api/auth/login'&&req.method==='POST'){
     const ip=clientIp(req)||'local', attempt=loginAttempts.get(ip)||{count:0,until:0};
@@ -115,7 +130,31 @@ async function api(req,res,pathname){
   const publicRenewalMatch=pathname.match(/^\/api\/renewal-response\/([^/]+)$/);
   if(publicRenewalMatch&&req.method==='GET'){const renewals=readCollection(renewalsFile),renewal=renewals.find(item=>item.token===publicRenewalMatch[1]);if(!renewal)return json(res,404,{error:'This renewal link is invalid.'});if(!renewal.proposedExpiry){const member=readCollection(membersFile).find(item=>String(item.id)===String(renewal.memberId)),term=readSettings().renewalTermYears||3;renewal.currentExpiry=member?.renewal||renewal.currentExpiry||'';renewal.renewalYears=Number(renewal.renewalYears||term);renewal.proposedExpiry=addRenewalYears(renewal.currentExpiry,renewal.renewalYears);renewal.membershipYear=`${renewal.renewalYears}-year term`;writeCollection(renewalsFile,renewals)}const proposedLabel=renewal.proposedExpiry?new Date(renewal.proposedExpiry+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'the new expiry date';return json(res,200,{renewal:{memberName:renewal.memberName,membershipYear:`a ${renewal.renewalYears||3}-year term, until ${proposedLabel}`,currentExpiry:renewal.currentExpiry,proposedExpiry:renewal.proposedExpiry,renewalYears:renewal.renewalYears,response:renewal.response}});}
   if(publicRenewalMatch&&req.method==='POST'){const body=await readBody(req);if(!['Renewing','Not renewing'].includes(body.response))return json(res,400,{error:'Choose whether you wish to renew.'});const renewals=readCollection(renewalsFile),renewal=renewals.find(item=>item.token===publicRenewalMatch[1]);if(!renewal)return json(res,404,{error:'This renewal link is invalid.'});renewal.response=body.response;renewal.respondedAt=new Date().toISOString();renewal.responseNote=String(body.note||'').trim().slice(0,1000);writeCollection(renewalsFile,renewals);if(body.response==='Renewing'&&renewal.proposedExpiry){const members=readCollection(membersFile),member=members.find(item=>String(item.id)===String(renewal.memberId));if(member){member.renewal=new Date(renewal.proposedExpiry+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});member.status='Active';writeCollection(membersFile,members)}}return json(res,200,{ok:true,response:renewal.response,proposedExpiry:renewal.proposedExpiry});}
+  if(pathname==='/api/guest-interest'&&req.method==='POST'){
+    const ip=clientIp(req)||'local',now=Date.now(),recent=(guestInterestAttempts.get(ip)||[]).filter(time=>now-time<60*60*1000);
+    if(recent.length>=5)return json(res,429,{error:'Too many requests have been submitted. Please try again later.'});
+    const body=await readBody(req);if(String(body.website||'').trim())return json(res,201,{ok:true});
+    const name=String(body.name||'').trim(),group=String(body.group||'').trim(),email=String(body.email||'').trim().toLowerCase(),phone=String(body.phone||'').trim();
+    if(!name||!group)return json(res,400,{error:'Enter your name and group or organisation.'});
+    if(!email&&!phone)return json(res,400,{error:'Enter an email address or phone number.'});
+    if(email&&!validEmail(email))return json(res,400,{error:'Enter a valid email address.'});
+    const linkedEvent=readCollection(eventsFile).find(item=>String(item.id)===String(body.eventId||''));if(!linkedEvent)return json(res,404,{error:'That event is no longer available.'});
+    const record={id:crypto.randomUUID(),eventId:String(linkedEvent.id).slice(0,100),eventTitle:String(linkedEvent.title||'Event').trim().slice(0,160),eventDate:String(linkedEvent.fullDate||linkedEvent.date||'').slice(0,40),name:name.slice(0,120),callsign:String(body.callsign||'').trim().slice(0,30),group:group.slice(0,120),email:email.slice(0,160),phone:phone.slice(0,50),notes:String(body.notes||'').trim().slice(0,1000),status:'New',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    const records=readCollection(guestHelpersFile);records.unshift(record);writeCollection(guestHelpersFile,records);recent.push(now);guestInterestAttempts.set(ip,recent);return json(res,201,{ok:true,id:record.id});
+  }
   if(!user)return json(res,401,{error:'Please sign in.'});
+  if(pathname==='/api/guest-helpers'&&req.method==='GET'){if(!['admin','coordinator','viewer'].includes(user.role))return json(res,403,{error:'Staff access required.'});return json(res,200,{helpers:readCollection(guestHelpersFile)});}
+  const guestHelperMatch=pathname.match(/^\/api\/guest-helpers\/([^/]+)$/);
+  if(guestHelperMatch&&req.method==='PATCH'){
+    if(!['admin','coordinator'].includes(user.role))return json(res,403,{error:'Staff access required.'});const records=readCollection(guestHelpersFile),record=records.find(item=>item.id===guestHelperMatch[1]);if(!record)return json(res,404,{error:'Guest helper record not found.'});const body=await readBody(req);if(!['New','Contacted','Confirmed','Declined'].includes(body.status))return json(res,400,{error:'Choose a valid status.'});record.status=body.status;record.updatedAt=new Date().toISOString();writeCollection(guestHelpersFile,records);return json(res,200,{helper:record});
+  }
+  if(guestHelperMatch&&req.method==='DELETE'){
+    if(user.role!=='admin')return json(res,403,{error:'Administrator access required.'});const records=readCollection(guestHelpersFile),remaining=records.filter(item=>item.id!==guestHelperMatch[1]);if(remaining.length===records.length)return json(res,404,{error:'Guest helper record not found.'});writeCollection(guestHelpersFile,remaining);return json(res,200,{ok:true});
+  }
+  if(pathname==='/api/events/import'&&req.method==='POST'){if(user.role!=='admin')return json(res,403,{error:'Administrator access required.'});const existing=readCollection(eventsFile);if(existing.length)return json(res,200,{events:existing});const body=await readBody(req),events=Array.isArray(body.events)?body.events.slice(0,1000):[];writeCollection(eventsFile,events);return json(res,201,{events});}
+  if(pathname==='/api/events'&&req.method==='POST'){if(!['admin','coordinator'].includes(user.role))return json(res,403,{error:'Staff access required.'});const body=await readBody(req);if(!String(body.title||'').trim()||!String(body.fullDate||'').trim())return json(res,400,{error:'Enter an event name and date.'});const events=readCollection(eventsFile),event={id:crypto.randomUUID(),title:String(body.title).trim().slice(0,160),fullDate:String(body.fullDate).slice(0,10),date:String(body.date||'').slice(0,30),time:String(body.time||'').slice(0,10),needed:Math.max(1,Number(body.needed)||1),organisationId:String(body.organisationId||'').slice(0,100),location:String(body.location||'').trim().slice(0,200),desc:String(body.desc||'').trim().slice(0,2000),yes:0,tone:String(body.tone||''),createdAt:new Date().toISOString()};events.push(event);writeCollection(eventsFile,events);return json(res,201,{event});}
+  const eventMatch=pathname.match(/^\/api\/events\/([^/]+)$/);
+  if(eventMatch&&req.method==='PATCH'){if(!['admin','coordinator'].includes(user.role))return json(res,403,{error:'Staff access required.'});const events=readCollection(eventsFile),event=events.find(item=>String(item.id)===eventMatch[1]);if(!event)return json(res,404,{error:'Event not found.'});const body=await readBody(req);for(const field of ['title','fullDate','date','time','organisationId','location','desc','tone'])if(body[field]!==undefined)event[field]=String(body[field]).trim();if(body.needed!==undefined)event.needed=Math.max(1,Number(body.needed)||1);event.updatedAt=new Date().toISOString();writeCollection(eventsFile,events);return json(res,200,{event});}
   if(pathname==='/api/settings'&&req.method==='GET')return json(res,200,{settings:readSettings()});
   if(pathname==='/api/public-site'&&req.method==='PUT'){
     if(user.role!=='admin')return json(res,403,{error:'Administrator access required.'});
@@ -249,7 +288,7 @@ async function api(req,res,pathname){
   return json(res,404,{error:'Not found.'});
 }
 
-http.createServer(async(req,res)=>{
+const server=http.createServer(async(req,res)=>{
   try{
     const pathname=decodeURIComponent(new URL(req.url,`http://localhost:${port}`).pathname);
     if(pathname.startsWith('/api/'))return await api(req,res,pathname);
@@ -257,5 +296,8 @@ http.createServer(async(req,res)=>{
     if(requested.startsWith('data/')||requested.includes('..')){res.writeHead(403);return res.end('Forbidden');}
     const file=path.join(root,requested);fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found');}const headers={'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'strict-origin-when-cross-origin','Permissions-Policy':'camera=(), microphone=(), geolocation=()','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"};if(appUrl.protocol==='https:')headers['Strict-Transport-Security']='max-age=31536000; includeSubDomains';res.writeHead(200,headers);res.end(data);});
   }catch(error){console.error(error);json(res,500,{error:'The server could not complete that request.'});}
-}).listen(port,host,()=>console.log(`RAYNET CRM running on ${host}:${port}; public URL ${appUrl.origin}`));
-setInterval(()=>processRenewalAutomation().catch(error=>console.error('Renewal automation:',error.message)),60*60*1000);
+});
+async function start(){await initialiseStorage();server.listen(port,host,()=>console.log(`RAYNET CRM running on ${host}:${port}; public URL ${appUrl.origin}; storage ${storageDriver}`));setInterval(()=>processRenewalAutomation().catch(error=>console.error('Renewal automation:',error.message)),60*60*1000)}
+async function shutdown(){server.close();await mysqlWriteQueue;if(mysqlPool)await mysqlPool.end();process.exit(0)}
+process.on('SIGINT',shutdown);process.on('SIGTERM',shutdown);
+start().catch(error=>{console.error('Startup failed:',error.message);process.exit(1)});
