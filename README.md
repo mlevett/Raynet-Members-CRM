@@ -97,6 +97,9 @@ Administrators can open **Branding** to change the organisation name, short name
 - Renewal responses (`Renewing`, `Not renewing`, `No response`)
 - Initial and follow-up reminder logging
 - Public calendar and event publishing
+- Annual event and participation reports for members and guest helpers
+- External-group events with distinct calendar styling and host-group details
+- Manual or automatic availability-roster emails to an external group's event contact
 - Public member portal for event availability responses
 - Responsive desktop and mobile layouts
 - Secure first-run setup, login/logout, user roles and account administration
