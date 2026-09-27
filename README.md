@@ -100,6 +100,7 @@ Administrators can open **Branding** to change the organisation name, short name
 - Flexible date-range event and participation reports for members and guest helpers
 - External-group events with distinct calendar styling and host-group details
 - Manual or automatic availability-roster emails to an external group's event contact
+- Full JSON backup/restore plus CSV exports for operational record sets
 - Public member portal for event availability responses
 - Responsive desktop and mobile layouts
 - Secure first-run setup, login/logout, user roles and account administration
