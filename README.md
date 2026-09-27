@@ -102,6 +102,7 @@ Administrators can open **Branding** to change the organisation name, short name
 - Manual or automatic availability-roster emails to an external group's event contact
 - Full JSON backup/restore plus CSV exports for operational record sets
 - Preview-first retention purges and individual member/guest erasure tools
+- Branded newsletters with audience selection, per-recipient delivery logs and member-controlled email preferences
 - Public member portal for event availability responses
 - Responsive desktop and mobile layouts
 - Secure first-run setup, login/logout, user roles and account administration

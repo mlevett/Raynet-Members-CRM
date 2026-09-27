@@ -30,6 +30,7 @@
         <button class="nav-item" data-page="renewals"><i data-icon="refresh"></i><span>Renewals</span><b class="warn" id="renewal-pill"></b></button>
         <button class="nav-item" data-page="events"><i data-icon="calendar"></i><span>Events</span></button>
         <button class="nav-item" data-page="reports"><i data-icon="grid"></i><span>Reports</span></button>
+        <button class="special-nav" id="communications-nav"><i data-icon="bell"></i><span>Newsletters</span></button>
         <button class="nav-item" data-page="guest-helpers"><i data-icon="users"></i><span>Guest helpers</span></button>
         <button class="nav-item admin-only" data-page="users"><i data-icon="shield"></i><span>Users & access</span></button>
         <button class="nav-item admin-only" data-page="branding"><i data-icon="palette"></i><span>Branding</span></button>
@@ -42,7 +43,7 @@
       <div class="sidebar-footer">
         <button id="open-public" hidden aria-hidden="true" tabindex="-1"></button>
         <button class="portal-link" id="member-home-link"><span class="portal-icon">↗</span><span><small>Public access</small>View member homepage</span></button>
-        <div class="profile"><div class="avatar" id="profile-avatar">ML</div><div><strong id="profile-name">Account</strong><small id="profile-role">Signed in</small></div><button id="logout-btn" aria-label="Sign out" title="Sign out">↪</button></div>
+        <div class="profile"><div class="avatar" id="profile-avatar">ML</div><div><strong id="profile-name">Account</strong><small id="profile-role">Signed in</small></div><button id="my-profile-btn" aria-label="My profile" title="My profile">⚙</button><button id="logout-btn" aria-label="Sign out" title="Sign out">↪</button></div>
       </div>
     </aside>
 
@@ -54,6 +55,6 @@
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modal-close">×</button><div id="modal-content"></div></div></div>
   <div class="toast" id="toast"><span>✓</span><div><strong>Saved</strong><small>Changes have been recorded.</small></div></div>
-  <script src="app.js?v=20260927-gdpr-tools"></script>
+  <script src="app.js?v=20260927-communications"></script>
 </body>
 </html>
