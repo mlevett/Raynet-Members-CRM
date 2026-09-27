@@ -23,7 +23,7 @@
 @media(max-width:560px){.home-nav{height:74px;padding:0 14px}.home-brand img{width:48px;height:48px}.home-brand strong{font-size:12px}.home-account span{display:none}.home-account .primary-btn,.home-account .secondary-btn{padding:9px}.home-hero,.home-section{padding:42px 20px}.home-hero h1{font-size:38px}.home-news-grid,.home-links-grid{grid-template-columns:1fr}.home-section-head{display:block}.home-event-list .response-buttons{min-width:0}.home-footer{display:block}.home-footer>p{margin-top:20px}}
 
 /* The member hub is now the default landing page, so the old portal shortcut is redundant. */
-#open-public{display:none!important}.sidebar nav{overflow-y:auto;min-height:0;padding-right:3px}.sidebar-footer{flex:none}.sidebar nav::-webkit-scrollbar{width:5px}.sidebar nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:5px}
+.sidebar nav{overflow-y:auto;min-height:0;padding-right:3px}.sidebar-footer{flex:none}.sidebar nav::-webkit-scrollbar{width:5px}.sidebar nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:5px}
 
 .home-calendar-title{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 17px}.home-calendar-title .secondary-btn{min-width:42px;padding:8px 12px;font-size:18px}
 

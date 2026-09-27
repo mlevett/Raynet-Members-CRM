@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260927-flexible-reporting" />
+  <link rel="stylesheet" href="styles.css?v=20260927-home-link" />
 </head>
 <body>
   <div id="public-home" hidden></div>
@@ -39,7 +39,7 @@
         <button class="special-nav admin-only" id="database-settings-nav" onclick="databaseSettingsForm()"><i data-icon="settings"></i><span>Database settings</span></button>
       </nav>
       <div class="sidebar-footer">
-        <button class="portal-link" id="open-public"><span class="portal-icon">↗</span><span><small>Public access</small>Member portal</span></button>
+        <button class="portal-link" id="member-home-link"><span class="portal-icon">↗</span><span><small>Public access</small>View member homepage</span></button>
         <div class="profile"><div class="avatar" id="profile-avatar">ML</div><div><strong id="profile-name">Account</strong><small id="profile-role">Signed in</small></div><button id="logout-btn" aria-label="Sign out" title="Sign out">↪</button></div>
       </div>
     </aside>
@@ -52,6 +52,6 @@
 
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modal-close">×</button><div id="modal-content"></div></div></div>
   <div class="toast" id="toast"><span>✓</span><div><strong>Saved</strong><small>Changes have been recorded.</small></div></div>
-  <script src="app.js?v=20260927-flexible-reporting"></script>
+  <script src="app.js?v=20260927-home-link"></script>
 </body>
 </html>
