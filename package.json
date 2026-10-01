@@ -5,7 +5,8 @@
   "engines": { "node": ">=18" },
   "description": "SE Hants RAYNET membership, renewals and events CRM",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "mysql2": "^3.15.1"

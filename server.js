@@ -25,6 +25,8 @@ const storageConfigFile = path.join(dataDir, 'storage-config.json');
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || '127.0.0.1';
 const appUrl = new URL(process.env.APP_URL || `http://localhost:${port}`);
+if(!appUrl.pathname.endsWith('/'))appUrl.pathname+='/'
+const basePath=appUrl.pathname==='/'?'':appUrl.pathname;
 const trustedOrigins = new Set([appUrl.origin,`http://localhost:${port}`,`http://127.0.0.1:${port}`,...String(process.env.TRUSTED_ORIGINS||'').split(',').map(value=>value.trim()).filter(Boolean)]);
 const trustProxy = process.env.TRUST_PROXY === '1';
 let savedStorageConfig={};try{savedStorageConfig=JSON.parse(fs.readFileSync(storageConfigFile,'utf8'))}catch{}
@@ -104,7 +106,7 @@ function csvDocument(rows){if(!rows.length)return '\ufeff';const headings=[...ne
 function readBody(req) { return new Promise((resolve,reject)=>{let body='';req.on('data',c=>{body+=c;if(body.length>2500000)reject(new Error('Request too large'));});req.on('end',()=>{try{resolve(body?JSON.parse(body):{});}catch{reject(new Error('Invalid JSON'));}});req.on('error',reject);}); }
 function validPassword(password){return typeof password==='string'&&password.length>=10;}
 function validEmail(email){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email||'').toLowerCase());}
-function sessionCookie(token,maxAge=28800){return `raynet_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${appUrl.protocol==='https:'?'; Secure':''}`;}
+function sessionCookie(token,maxAge=28800){return `raynet_session=${token}; HttpOnly; SameSite=Strict; Path=${basePath||'/'}; Max-Age=${maxAge}${appUrl.protocol==='https:'?'; Secure':''}`;}
 function createSession(userId){const token=crypto.randomBytes(32).toString('hex'),sessions=readSessions();sessions.push({tokenHash:tokenHash(token),userId,expires:Date.now()+8*60*60*1000,createdAt:new Date().toISOString()});writeSessions(sessions);return token;}
 function deleteSession(token){const hash=tokenHash(token);writeSessions(readSessions().filter(session=>session.tokenHash!==hash));}
 function sameOrigin(req){const origin=req.headers.origin;if(!origin)return true;const forwardedProtocol=trustProxy?String(req.headers['x-forwarded-proto']||'').split(',')[0].trim():'';const protocol=forwardedProtocol||((req.socket.encrypted)?'https':'http'),requestOrigin=req.headers.host?`${protocol}://${req.headers.host}`:'';return trustedOrigins.has(origin)||origin===requestOrigin;}
@@ -384,14 +386,16 @@ async function api(req,res,pathname){
 
 const server=http.createServer(async(req,res)=>{
   try{
-    const pathname=decodeURIComponent(new URL(req.url,`http://localhost:${port}`).pathname);
+    let pathname=decodeURIComponent(new URL(req.url,`http://localhost:${port}`).pathname);
+    if(basePath&&pathname===basePath.slice(0,-1)){res.writeHead(308,{Location:basePath});return res.end()}
+    if(basePath&&pathname.startsWith(basePath))pathname='/'+pathname.slice(basePath.length);
     if(pathname.startsWith('/api/'))return await api(req,res,pathname);
     const requested=pathname==='/'?'index.html':pathname.replace(/^\//,'');
     if(requested.startsWith('data/')||requested.includes('..')){res.writeHead(403);return res.end('Forbidden');}
     const file=path.join(root,requested);fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end('Not found');}const headers={'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'strict-origin-when-cross-origin','Permissions-Policy':'camera=(), microphone=(), geolocation=()','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"};if(appUrl.protocol==='https:')headers['Strict-Transport-Security']='max-age=31536000; includeSubDomains';res.writeHead(200,headers);res.end(data);});
   }catch(error){console.error(error);json(res,500,{error:'The server could not complete that request.'});}
 });
-async function start(){await initialiseStorage();server.listen(port,host,()=>console.log(`RAYNET CRM running on ${host}:${port}; public URL ${appUrl.origin}; storage ${storageDriver}`));setInterval(()=>processRenewalAutomation().catch(error=>console.error('Renewal automation:',error.message)),60*60*1000)}
+async function start(){await initialiseStorage();server.listen(port,host,()=>console.log(`RAYNET CRM running on ${host}:${port}; public URL ${appUrl.href}; storage ${storageDriver}`));setInterval(()=>processRenewalAutomation().catch(error=>console.error('Renewal automation:',error.message)),60*60*1000)}
 async function shutdown(){server.close();await mysqlWriteQueue;if(mysqlPool)await mysqlPool.end();process.exit(0)}
 process.on('SIGINT',shutdown);process.on('SIGTERM',shutdown);
 start().catch(error=>{console.error('Startup failed:',error.message);process.exit(1)});
